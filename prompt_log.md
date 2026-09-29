@@ -1,83 +1,150 @@
 # Prompt Log
 
-## AI tools and models used
+## AI Tool Used
 
-I used **ChatGPT by OpenAI** throughout the development process to help brainstorm, implement, debug, and refine Scripture Graph.
+I used ChatGPT by OpenAI throughout the development of Scripture Graph.
 
-The deployed backend also uses the **OpenAI API** with the model configured as:
+The deployed backend also uses the OpenAI API with the model configured as:
 
 ```text
 gpt-5.6-luna
 ```
 
-## Key prompts and requests that shaped the project
+## Actual Prompts from Development
 
-The following are representative prompts and requests used during development.
+Below are real prompts and requests from my conversations with ChatGPT while building the project.
 
-### Project idea and architecture
+### Initial Project Direction
 
-> Help me design a Bible exploration project with a frontend and backend where users can search a verse, person, topic, or question.
+> I want to make a Bible explorer / translator type of site where you can search something and it shows biblical relationships and cross references.
 
-> Help me structure the project so the frontend is on GitHub Pages and the Python Flask backend is deployed on Render.
+> I want the bigger version, modern and creative, not vibe coded, and more technical and data driven.
 
-### Backend development
+These prompts shaped the overall idea of Scripture Graph as an interactive Bible knowledge network instead of a basic search page.
 
-> Help me build a Flask backend that accepts a search query and returns structured JSON for my frontend.
+### Search Behavior
 
-> Help me organize the backend into separate files for the Flask app, Bible data retrieval, AI calls, and service logic.
+> I want people to be able to search anything like fear, Moses, John 3:16, or what does Jesus say about fear?
 
-### Frontend-backend communication
+This led to the design where the backend accepts broad topics, people, verses, and natural-language questions.
 
-> Help me connect my JavaScript frontend to my Flask backend using fetch.
+### Graph Structure
 
-> Help me handle backend errors cleanly in the frontend.
+> I want the searched entity centered, then subthemes around it, then verses correlated with each subtheme.
 
-### Bible search and data
+This shaped the intended hierarchy of the graph:
 
-> Help me retrieve relevant Bible passages for searches like fear, gospel, Moses, or John 3:16.
+```text
+topic
+  → subthemes
+      → related verses
+```
 
-> Help me support natural-language searches like “What does Jesus say about fear?”
+### Showing More Scripture
 
-### AI integration
+> if I search fear I want it to show all the verses that mention fear, like all 365 or whatever
 
-> Help me use AI to interpret a Bible-related search and organize retrieved passages into topics and subthemes.
+This influenced the idea of retrieving a larger set of matching passages while keeping the initial graph readable.
 
-> Help me return AI-generated explanations in structured JSON that my frontend can use.
+### Centering and Layout
 
-### Graph visualization
+> will it still be centered
 
-> Help me build an interactive knowledge graph with Cytoscape.js where the searched topic is the main node and related concepts and verses appear around it.
+> for now just change the front end to fix some of those, they werent stacked till we adjusted the centering
 
-> Help me center the searched node while still allowing the other nodes to spread naturally and avoid overlapping.
+These prompts led to changes in the Cytoscape layout so the searched node remains centered in the viewport while the rest of the graph uses a more natural force-directed layout.
 
-> Help me distinguish different types of relationships in the graph.
+### Relationship Types
 
-### Deployment and debugging
+> its still like this and also why have dotted lines if theyre all the same and not distinguished
 
-> Help me deploy my Flask backend to Render.
+> the ideas and verses arent correlated how do i fix this, and how do i either get rid of the dots reference to RELATIONSHIPS CROSS REFERENCE CONTEXT / REFERENCE TOPIC / SUBTHEME or actually implement it
 
-> Help me debug why the backend works locally but the OpenAI request fails on Render.
+These prompts led to distinguishing actual relationship types instead of using decorative edge styles.
 
-> Help me configure the required Render environment variables and Python dependencies.
+The intended relationship structure became:
 
-### Portfolio integration
+```text
+TOPIC / SUBTHEME
+CROSS REFERENCE
+CONTEXT / REFERENCE
+```
 
-> Help me add Scripture Graph to my portfolio with an image, project description, live-project link, frontend repository link, and backend repository link.
+with each line style representing a real type of connection.
 
-## How AI was used
+### Backend Data Structure
 
-AI was used as a development assistant rather than as a replacement for testing or decision-making.
+> its still like this and the ideas and verses arent correlated how do i fix this
 
-I used AI suggestions to help with:
+This exposed a backend data-model issue: verses were being connected directly to the center topic instead of being assigned to the subthemes they matched.
 
-- brainstorming
-- code generation
-- debugging
-- explaining errors
-- frontend/backend integration
-- API usage
-- graph layout
-- deployment configuration
-- documentation
+That led to the intended backend structure:
 
-I reviewed, tested, and revised the generated code while deciding the final project structure, functionality, visual design, and feature scope.
+```text
+topic
+  → subtheme
+      → matching verse
+```
+
+### Backend / OpenAI Debugging
+
+During deployment, I also asked ChatGPT for help debugging the backend when the OpenAI API worked locally but not correctly on Render.
+
+Examples of the issues we worked through included:
+
+> why is the OpenAI connection not working on Render
+
+> what should I put for the environment variables
+
+> give me the whole file to replace it with
+
+This led to changes in the OpenAI request logic, Render environment variables, and backend dependencies.
+
+### Frontend / Backend Integration
+
+I asked for help connecting the deployed frontend to the Render backend and updating the frontend API URL.
+
+The frontend was configured to call:
+
+```javascript
+const API_BASE = "https://scripture-graph-backend.onrender.com";
+```
+
+and send searches to:
+
+```text
+/explore?q=<query>
+```
+
+### Portfolio Integration
+
+> now i need you to put this project into my portfolio here is the code for it and the image i want for this project is names scripture.jpeg and its already in the repo
+
+> the explore project button doesnt take you to https://kadiekeslar.github.io/scripture-graph/
+
+These prompts were used to add Scripture Graph to my portfolio, use `scripture.jpeg` as the project image, and connect the project card to the deployed frontend and GitHub repositories.
+
+### Documentation
+
+> there is no read me or prompt log here are the project requirements again
+
+> the prompt log should be actual chats we had
+
+These prompts led to creating the final README and prompt log required for the assignment.
+
+## How I Used AI
+
+I used ChatGPT to help with:
+
+- brainstorming the project idea
+- planning the frontend/backend structure
+- generating and revising Flask code
+- connecting the frontend to the backend
+- debugging OpenAI API calls
+- configuring Render deployment
+- improving the Cytoscape graph layout
+- organizing topic/subtheme/verse relationships
+- adding the project to my portfolio
+- writing project documentation
+
+I tested and revised the generated code throughout development and made decisions about the final project structure, functionality, appearance, and scope.
