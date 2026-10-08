@@ -275,6 +275,8 @@ def build_entity_graph(query, kind, match, with_explanations=True):
             r["book"], r["chapter"], r["verse"], r.get("endVerse")
         )
         text = retrieved_texts[i]
+        if not text:
+            continue
 
         nodes.append(
             node(
