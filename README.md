@@ -185,3 +185,7 @@ The API version is now `compare-insights-p2`. `/explore?fast=1` returns retrieva
 Data retrieval runs in parallel; successful graph and comparison results are cached for ten minutes in each server process with bounded storage and same-request coalescing. Common topics avoid AI classification in fast mode. The full-translation reader correctly unwraps nested `chapter` records, and initial full-Bible downloads are serialized. More complex questions and final interpretation still depend on external APIs. Service sleep/restarts clear the in-memory cache.
 
 Run `python -m unittest discover -s tests` after installing the requirements. For synchronous provider calls, a Gunicorn command such as `gunicorn app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT` gives room for optional explanations. Render's existing start command must be configured in its dashboard if it still uses a shorter worker timeout; changing repository code does not change that setting.
+
+## Jesus identity and comparison repair
+
+A plain Jesus search resolves to Jesus Christ; “Jesus called Justus” explicitly selects the other person. Entity evidence samples across available references instead of only the first twelve. Invalid AI comparisons retry once against the original evidence, preserving citation checks. Blank study questions are rejected.

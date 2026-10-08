@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from time import sleep
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from comparison import validate_report
+from comparison import validate_report, compare_graphs
 import result_cache
 import services
 import app as api
@@ -18,6 +18,21 @@ class ComparisonTests(unittest.TestCase):
     def setUp(self): result_cache._results.clear()
     def test_grounded_report(self):
         self.assertEqual(validate_report(report(),graph('John 3:16','believe'),graph('Romans 8:28','love'))['method'],'ai')
+    def test_blank_questions_rejected(self):
+        value=report();value['study_questions']=['   ']
+        with self.assertRaises(ValueError): validate_report(value,graph('John 3:16','believe'),graph('Romans 8:28','love'))
+    def test_invalid_ai_response_retries_with_original_evidence(self):
+        value=report();value['similarities'][0]['left_refs']=['Unsupported 1:1']
+        with patch('comparison.call_openai_json',side_effect=[value,report()]) as ai:
+            result=compare_graphs(graph('John 3:16','believe'),graph('Romans 8:28','love'))
+        self.assertEqual(result['method'],'ai');self.assertEqual(ai.call_count,2)
+        self.assertEqual(ai.call_args_list[0].args[1],ai.call_args_list[1].args[1])
+    def test_entity_evidence_spans_available_references(self):
+        refs=[{'book':'JHN','chapter':1,'verse':i} for i in range(1,31)]
+        with patch.object(services,'get_entity_detail',return_value={'id':'christ','name':'Jesus Christ','references':refs}),patch.object(services,'safe_passage',return_value='text'):
+            result=services.build_entity_graph('Jesus','person',{'id':'christ'},False)
+        labels=[n['data']['reference'] for n in result['nodes'] if n['data']['type']=='verse']
+        self.assertEqual(len(labels),12);self.assertIn('John 1:1',labels);self.assertIn('John 1:30',labels)
     def test_wrong_side_citation_rejected(self):
         value=report();value['similarities'][0]['left_refs']=['Romans 8:28']
         with self.assertRaises(ValueError): validate_report(value,graph('John 3:16','believe'),graph('Romans 8:28','love'))

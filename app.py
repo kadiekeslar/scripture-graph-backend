@@ -21,7 +21,7 @@ def home():
     return jsonify({
         "name": "Scripture Graph API",
         "status": "ok",
-        "version": "compare-insights-p2",
+        "version": "compare-identity-fix-p2",
         "description": "AI-assisted Bible knowledge graph using retrieved Bible data.",
         "example": "/explore?q=fear"
     })
@@ -70,7 +70,7 @@ def compare():
         return jsonify(report)
     except Exception as exc:
         print("COMPARISON unavailable:", type(exc).__name__)
-        return jsonify({"error": "The AI comparison is unavailable. The graph and text-based comparison still work."}), 503
+        return jsonify({"error": "The AI comparison is unavailable. The graph and text-based comparison still work.", "code": "invalid_comparison_response" if isinstance(exc, (ValueError, TypeError, KeyError)) else "comparison_service_unavailable"}), 503
 
 
 @app.get("/explain")

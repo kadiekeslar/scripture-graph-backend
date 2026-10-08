@@ -218,7 +218,9 @@ def _best_entity_match(query, items, aliases_fields=()):
 
 
 def find_person(query):
-    return _best_entity_match(query, people_index(), aliases_fields=("alsoCalled",))
+    # A bare Jesus search conventionally means Jesus Christ, not Jesus called Justus.
+    resolved = {"jesus": "Jesus Christ", "jesus called justus": "Jesus"}.get(_normalize(query), query)
+    return _best_entity_match(resolved, people_index(), aliases_fields=("alsoCalled",))
 
 
 def find_place(query):

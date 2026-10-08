@@ -64,3 +64,7 @@ I tested and revised the generated code throughout development and made decision
 ## Project 2 continuation (AI-generated factual record)
 
 The original log above describes the earlier project. The P2 implementation/application requests and new development record are in the [separate P2 prompt log](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/prompt_log.md). Codex modified app.py, bible_data.py, and services.py for safe errors, full ranges, lexical boundaries, data caching, optional lookup resilience, and empty-result handling. Student-written changes and actual focused work time must still be recorded by the student.
+
+## Jesus identity and comparison repair
+
+A plain Jesus search resolves to Jesus Christ; “Jesus called Justus” explicitly selects the other person. Entity evidence samples across available references instead of only the first twelve. Invalid AI comparisons retry once against the original evidence, preserving citation checks. Blank study questions are rejected.

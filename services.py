@@ -265,7 +265,9 @@ def build_entity_graph(query, kind, match, with_explanations=True):
     ]
     edges = []
 
-    refs = detail.get("references", [])[:12]
+    all_refs = detail.get("references", [])
+    # Sample across the dataset instead of taking only the first biblical book.
+    refs = all_refs if len(all_refs) <= 12 else [all_refs[round(i * (len(all_refs) - 1) / 11)] for i in range(12)]
     retrieved_texts = list(DATA_POOL.map(safe_passage, refs))
     for i, r in enumerate(refs):
         target_id = ref_id(r["book"], r["chapter"], r["verse"])

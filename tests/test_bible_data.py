@@ -22,6 +22,13 @@ class PassageTests(unittest.TestCase):
         with patch.object(b,'get_complete_translation',return_value=fixture):
             self.assertEqual(b.verse_corpus()[0]['label'],'John 3:16')
         b.verse_corpus.cache_clear()
+    def test_plain_jesus_resolves_christ_and_explicit_justus_stays_available(self):
+        from unittest.mock import patch
+        items=[{'id':'justus','name':'Jesus'},{'id':'christ','name':'Jesus Christ'}]
+        with patch.object(b,'people_index',return_value=items):
+            self.assertEqual(b.find_person('Jesus')[0]['id'],'christ')
+            self.assertEqual(b.find_person('Jesus Christ')[0]['id'],'christ')
+            self.assertEqual(b.find_person('Jesus called Justus')[0]['id'],'justus')
     def test_word_boundaries_and_prefixes(self):
         b.verse_corpus = lambda: [{'normalized':text,'book':'JHN','chapter':1,'verse':i,'text':text} for i,text in enumerate(['glove','love','lovely','fearful','unfearful'],1)]
         self.assertEqual([r['text'] for r in b.search_bible_text(['love'])],['love','lovely'])
