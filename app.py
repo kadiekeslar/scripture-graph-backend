@@ -21,7 +21,7 @@ def home():
     return jsonify({
         "name": "Scripture Graph API",
         "status": "ok",
-        "version": "compare-identity-fix-p2",
+        "version": "compare-connection-clarity-p2",
         "description": "AI-assisted Bible knowledge graph using retrieved Bible data.",
         "example": "/explore?q=fear"
     })

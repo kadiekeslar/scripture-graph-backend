@@ -68,3 +68,9 @@ The original log above describes the earlier project. The P2 implementation/appl
 ## Jesus identity and comparison repair
 
 A plain Jesus search resolves to Jesus Christ; “Jesus called Justus” explicitly selects the other person. Entity evidence samples across available references instead of only the first twelve. Invalid AI comparisons retry once against the original evidence, preserving citation checks. Blank study questions are rejected.
+
+## Connection clarity
+
+User prompt (verbatim): “right now the left side doesnt date, there were 3 connections like yellow lines but tit still says 0 also there is a lot of info its overwelming also when i click on the yellow line i dont understand why theyre connected i just see that theyre connected and can read both passages”
+
+Added passage-specific contributions to each similarity so graph lines can explain both sides, while retaining grounding and citation validation.
