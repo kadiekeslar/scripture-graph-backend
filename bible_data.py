@@ -9,59 +9,161 @@ BASE = "https://bible.helloao.org/api"
 TRANSLATION = "BSB"
 
 BOOK_ALIASES = {
-    "genesis": "GEN", "gen": "GEN",
-    "exodus": "EXO", "exod": "EXO", "exo": "EXO",
-    "leviticus": "LEV", "lev": "LEV",
-    "numbers": "NUM", "num": "NUM",
-    "deuteronomy": "DEU", "deut": "DEU",
-    "joshua": "JOS", "josh": "JOS",
-    "judges": "JDG", "judg": "JDG",
+    "genesis": "GEN",
+    "gen": "GEN",
+    "exodus": "EXO",
+    "exod": "EXO",
+    "exo": "EXO",
+    "leviticus": "LEV",
+    "lev": "LEV",
+    "numbers": "NUM",
+    "num": "NUM",
+    "deuteronomy": "DEU",
+    "deut": "DEU",
+    "joshua": "JOS",
+    "josh": "JOS",
+    "judges": "JDG",
+    "judg": "JDG",
     "ruth": "RUT",
-    "1 samuel": "1SA", "1 sam": "1SA",
-    "2 samuel": "2SA", "2 sam": "2SA",
-    "1 kings": "1KI", "2 kings": "2KI",
-    "1 chronicles": "1CH", "2 chronicles": "2CH",
-    "ezra": "EZR", "nehemiah": "NEH", "esther": "EST",
-    "job": "JOB", "psalm": "PSA", "psalms": "PSA", "ps": "PSA",
-    "proverbs": "PRO", "prov": "PRO",
-    "ecclesiastes": "ECC", "eccl": "ECC",
-    "song of solomon": "SNG", "song of songs": "SNG",
-    "isaiah": "ISA", "isa": "ISA",
-    "jeremiah": "JER", "jer": "JER",
-    "lamentations": "LAM", "ezekiel": "EZK", "daniel": "DAN",
-    "hosea": "HOS", "joel": "JOL", "amos": "AMO", "obadiah": "OBA",
-    "jonah": "JON", "micah": "MIC", "nahum": "NAM", "habakkuk": "HAB",
-    "zephaniah": "ZEP", "haggai": "HAG", "zechariah": "ZEC", "malachi": "MAL",
-    "matthew": "MAT", "matt": "MAT",
-    "mark": "MRK", "luke": "LUK", "john": "JHN",
-    "acts": "ACT", "romans": "ROM", "rom": "ROM",
-    "1 corinthians": "1CO", "2 corinthians": "2CO",
-    "galatians": "GAL", "ephesians": "EPH", "philippians": "PHP",
-    "colossians": "COL", "1 thessalonians": "1TH", "2 thessalonians": "2TH",
-    "1 timothy": "1TI", "2 timothy": "2TI", "titus": "TIT", "philemon": "PHM",
-    "hebrews": "HEB", "james": "JAS", "1 peter": "1PE", "2 peter": "2PE",
-    "1 john": "1JN", "2 john": "2JN", "3 john": "3JN",
-    "jude": "JUD", "revelation": "REV", "rev": "REV",
+    "1 samuel": "1SA",
+    "1 sam": "1SA",
+    "2 samuel": "2SA",
+    "2 sam": "2SA",
+    "1 kings": "1KI",
+    "2 kings": "2KI",
+    "1 chronicles": "1CH",
+    "2 chronicles": "2CH",
+    "ezra": "EZR",
+    "nehemiah": "NEH",
+    "esther": "EST",
+    "job": "JOB",
+    "psalm": "PSA",
+    "psalms": "PSA",
+    "ps": "PSA",
+    "proverbs": "PRO",
+    "prov": "PRO",
+    "ecclesiastes": "ECC",
+    "eccl": "ECC",
+    "song of solomon": "SNG",
+    "song of songs": "SNG",
+    "isaiah": "ISA",
+    "isa": "ISA",
+    "jeremiah": "JER",
+    "jer": "JER",
+    "lamentations": "LAM",
+    "ezekiel": "EZK",
+    "daniel": "DAN",
+    "hosea": "HOS",
+    "joel": "JOL",
+    "amos": "AMO",
+    "obadiah": "OBA",
+    "jonah": "JON",
+    "micah": "MIC",
+    "nahum": "NAM",
+    "habakkuk": "HAB",
+    "zephaniah": "ZEP",
+    "haggai": "HAG",
+    "zechariah": "ZEC",
+    "malachi": "MAL",
+    "matthew": "MAT",
+    "matt": "MAT",
+    "mark": "MRK",
+    "luke": "LUK",
+    "john": "JHN",
+    "acts": "ACT",
+    "romans": "ROM",
+    "rom": "ROM",
+    "1 corinthians": "1CO",
+    "2 corinthians": "2CO",
+    "galatians": "GAL",
+    "ephesians": "EPH",
+    "philippians": "PHP",
+    "colossians": "COL",
+    "1 thessalonians": "1TH",
+    "2 thessalonians": "2TH",
+    "1 timothy": "1TI",
+    "2 timothy": "2TI",
+    "titus": "TIT",
+    "philemon": "PHM",
+    "hebrews": "HEB",
+    "james": "JAS",
+    "1 peter": "1PE",
+    "2 peter": "2PE",
+    "1 john": "1JN",
+    "2 john": "2JN",
+    "3 john": "3JN",
+    "jude": "JUD",
+    "revelation": "REV",
+    "rev": "REV",
 }
 
 BOOK_NAMES = {
-    "GEN": "Genesis", "EXO": "Exodus", "LEV": "Leviticus", "NUM": "Numbers",
-    "DEU": "Deuteronomy", "JOS": "Joshua", "JDG": "Judges", "RUT": "Ruth",
-    "1SA": "1 Samuel", "2SA": "2 Samuel", "1KI": "1 Kings", "2KI": "2 Kings",
-    "1CH": "1 Chronicles", "2CH": "2 Chronicles", "EZR": "Ezra", "NEH": "Nehemiah",
-    "EST": "Esther", "JOB": "Job", "PSA": "Psalms", "PRO": "Proverbs",
-    "ECC": "Ecclesiastes", "SNG": "Song of Solomon", "ISA": "Isaiah", "JER": "Jeremiah",
-    "LAM": "Lamentations", "EZK": "Ezekiel", "DAN": "Daniel", "HOS": "Hosea",
-    "JOL": "Joel", "AMO": "Amos", "OBA": "Obadiah", "JON": "Jonah", "MIC": "Micah",
-    "NAM": "Nahum", "HAB": "Habakkuk", "ZEP": "Zephaniah", "HAG": "Haggai",
-    "ZEC": "Zechariah", "MAL": "Malachi", "MAT": "Matthew", "MRK": "Mark",
-    "LUK": "Luke", "JHN": "John", "ACT": "Acts", "ROM": "Romans",
-    "1CO": "1 Corinthians", "2CO": "2 Corinthians", "GAL": "Galatians", "EPH": "Ephesians",
-    "PHP": "Philippians", "COL": "Colossians", "1TH": "1 Thessalonians",
-    "2TH": "2 Thessalonians", "1TI": "1 Timothy", "2TI": "2 Timothy", "TIT": "Titus",
-    "PHM": "Philemon", "HEB": "Hebrews", "JAS": "James", "1PE": "1 Peter",
-    "2PE": "2 Peter", "1JN": "1 John", "2JN": "2 John", "3JN": "3 John",
-    "JUD": "Jude", "REV": "Revelation",
+    "GEN": "Genesis",
+    "EXO": "Exodus",
+    "LEV": "Leviticus",
+    "NUM": "Numbers",
+    "DEU": "Deuteronomy",
+    "JOS": "Joshua",
+    "JDG": "Judges",
+    "RUT": "Ruth",
+    "1SA": "1 Samuel",
+    "2SA": "2 Samuel",
+    "1KI": "1 Kings",
+    "2KI": "2 Kings",
+    "1CH": "1 Chronicles",
+    "2CH": "2 Chronicles",
+    "EZR": "Ezra",
+    "NEH": "Nehemiah",
+    "EST": "Esther",
+    "JOB": "Job",
+    "PSA": "Psalms",
+    "PRO": "Proverbs",
+    "ECC": "Ecclesiastes",
+    "SNG": "Song of Solomon",
+    "ISA": "Isaiah",
+    "JER": "Jeremiah",
+    "LAM": "Lamentations",
+    "EZK": "Ezekiel",
+    "DAN": "Daniel",
+    "HOS": "Hosea",
+    "JOL": "Joel",
+    "AMO": "Amos",
+    "OBA": "Obadiah",
+    "JON": "Jonah",
+    "MIC": "Micah",
+    "NAM": "Nahum",
+    "HAB": "Habakkuk",
+    "ZEP": "Zephaniah",
+    "HAG": "Haggai",
+    "ZEC": "Zechariah",
+    "MAL": "Malachi",
+    "MAT": "Matthew",
+    "MRK": "Mark",
+    "LUK": "Luke",
+    "JHN": "John",
+    "ACT": "Acts",
+    "ROM": "Romans",
+    "1CO": "1 Corinthians",
+    "2CO": "2 Corinthians",
+    "GAL": "Galatians",
+    "EPH": "Ephesians",
+    "PHP": "Philippians",
+    "COL": "Colossians",
+    "1TH": "1 Thessalonians",
+    "2TH": "2 Thessalonians",
+    "1TI": "1 Timothy",
+    "2TI": "2 Timothy",
+    "TIT": "Titus",
+    "PHM": "Philemon",
+    "HEB": "Hebrews",
+    "JAS": "James",
+    "1PE": "1 Peter",
+    "2PE": "2 Peter",
+    "1JN": "1 John",
+    "2JN": "2 John",
+    "3JN": "3 John",
+    "JUD": "Jude",
+    "REV": "Revelation",
 }
 
 GOSPEL_BOOKS = {"MAT", "MRK", "LUK", "JHN"}
@@ -217,14 +319,19 @@ def _best_entity_match(query, items, aliases_fields=()):
     return best, best_score, best_exact
 
 
+# Handle the ordinary ambiguous name explicitly before fuzzy entity matching.
 def find_person(query):
     # A bare Jesus search conventionally means Jesus Christ, not Jesus called Justus.
-    resolved = {"jesus": "Jesus Christ", "jesus called justus": "Jesus"}.get(_normalize(query), query)
+    resolved = {"jesus": "Jesus Christ", "jesus called justus": "Jesus"}.get(
+        _normalize(query), query
+    )
     return _best_entity_match(resolved, people_index(), aliases_fields=("alsoCalled",))
 
 
 def find_place(query):
-    return _best_entity_match(query, places_index(), aliases_fields=("aliases", "kjvName", "esvName"))
+    return _best_entity_match(
+        query, places_index(), aliases_fields=("aliases", "kjvName", "esvName")
+    )
 
 
 def find_event(query):
@@ -279,18 +386,21 @@ def verse_corpus():
                 if not number or not text:
                     continue
 
-                verses.append({
-                    "book": book_id,
-                    "chapter": int(chapter_number),
-                    "verse": int(number),
-                    "label": ref_label(book_id, int(chapter_number), int(number)),
-                    "text": text,
-                    "normalized": _normalize(text),
-                })
+                verses.append(
+                    {
+                        "book": book_id,
+                        "chapter": int(chapter_number),
+                        "verse": int(number),
+                        "label": ref_label(book_id, int(chapter_number), int(number)),
+                        "text": text,
+                        "normalized": _normalize(text),
+                    }
+                )
 
     return verses
 
 
+# This is lexical search over cached Bible text, not an AI-generated verse list.
 def search_bible_text(search_terms, limit=30, preferred_books=None):
     """
     Searches the complete BSB text for real lexical matches.
@@ -309,7 +419,13 @@ def search_bible_text(search_terms, limit=30, preferred_books=None):
     if not clean_terms:
         return []
 
-    patterns = [(term, re.compile(r"\b" + re.escape(term) + (r"\b" if " " in term else r"\w*\b"))) for term in clean_terms]
+    patterns = [
+        (
+            term,
+            re.compile(r"\b" + re.escape(term) + (r"\b" if " " in term else r"\w*\b")),
+        )
+        for term in clean_terms
+    ]
     preferred = set(preferred_books or [])
     results = []
 

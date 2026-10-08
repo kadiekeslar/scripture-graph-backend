@@ -7,7 +7,6 @@ from urllib.error import HTTPError, URLError
 
 from pydantic import BaseModel, Field
 
-
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 
@@ -18,14 +17,7 @@ class Subtheme(BaseModel):
 
 
 class QueryAnalysis(BaseModel):
-    query_type: Literal[
-        "verse",
-        "person",
-        "place",
-        "event",
-        "topic",
-        "question"
-    ]
+    query_type: Literal["verse", "person", "place", "event", "topic", "question"]
 
     normalized_query: str
     center_label: str
@@ -52,6 +44,8 @@ class ExplanationBundle(BaseModel):
     connection_explanations: list[ConnectionExplanation]
 
 
+# Only this server-side function reads the secret. JSON mode still requires the
+# caller to validate response fields and evidence; it does not guarantee accuracy.
 def call_openai_json(system_prompt, user_prompt):
     """
     Call OpenAI directly over HTTPS instead of using the OpenAI Python SDK.
@@ -62,32 +56,17 @@ def call_openai_json(system_prompt, user_prompt):
     api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
-        raise RuntimeError(
-            "OPENAI_API_KEY is missing from the environment."
-        )
+        raise RuntimeError("OPENAI_API_KEY is missing from the environment.")
 
-    model = os.getenv(
-        "OPENAI_MODEL",
-        "gpt-5.6-luna"
-    )
+    model = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 
     body = {
         "model": model,
-
         "messages": [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            }
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
         ],
-
-        "response_format": {
-            "type": "json_object"
-        }
+        "response_format": {"type": "json_object"},
     }
 
     request = Request(
@@ -96,75 +75,43 @@ def call_openai_json(system_prompt, user_prompt):
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
-            "User-Agent": "ScriptureGraph-HW4/2.0"
+            "User-Agent": "ScriptureGraph-HW4/2.0",
         },
-        method="POST"
+        method="POST",
     )
 
     try:
         with urlopen(request, timeout=60) as response:
-            response_data = json.loads(
-                response.read().decode("utf-8")
-            )
+            response_data = json.loads(response.read().decode("utf-8"))
 
     except HTTPError as exc:
-        error_body = exc.read().decode(
-            "utf-8",
-            errors="replace"
-        )
+        error_body = exc.read().decode("utf-8", errors="replace")
 
-        print(
-            "OPENAI HTTP ERROR:",
-            exc.code,
-            error_body
-        )
+        print("OPENAI HTTP ERROR:", exc.code, error_body)
 
-        raise RuntimeError(
-            f"OpenAI returned HTTP {exc.code}: {error_body}"
-        )
+        raise RuntimeError(f"OpenAI returned HTTP {exc.code}: {error_body}")
 
     except URLError as exc:
-        print(
-            "OPENAI CONNECTION ERROR:",
-            repr(exc.reason)
-        )
+        print("OPENAI CONNECTION ERROR:", repr(exc.reason))
 
-        raise RuntimeError(
-            f"Could not connect to OpenAI: {exc.reason}"
-        )
+        raise RuntimeError(f"Could not connect to OpenAI: {exc.reason}")
 
     except Exception as exc:
-        print(
-            "OPENAI UNKNOWN ERROR:",
-            repr(exc)
-        )
+        print("OPENAI UNKNOWN ERROR:", repr(exc))
 
-        raise RuntimeError(
-            f"OpenAI request failed: {exc}"
-        )
+        raise RuntimeError(f"OpenAI request failed: {exc}")
 
     try:
-        content = (
-            response_data["choices"][0]
-            ["message"]["content"]
-        )
+        content = response_data["choices"][0]["message"]["content"]
 
         return json.loads(content)
 
     except Exception as exc:
-        print(
-            "OPENAI RESPONSE PARSE ERROR:",
-            repr(exc)
-        )
+        print("OPENAI RESPONSE PARSE ERROR:", repr(exc))
 
-        print(
-            "OPENAI RAW RESPONSE:",
-            response_data
-        )
+        print("OPENAI RAW RESPONSE:", response_data)
 
-        raise RuntimeError(
-            "OpenAI returned a response that could not be parsed."
-        )
+        raise RuntimeError("OpenAI returned a response that could not be parsed.")
 
 
 @lru_cache(maxsize=128)
@@ -250,37 +197,23 @@ For clear people, places, events, or verses,
 subthemes and candidate_references may be empty.
 """
 
-    result = call_openai_json(
-        system_prompt,
-        query
-    )
+    result = call_openai_json(system_prompt, query)
 
     return QueryAnalysis(**result)
 
 
-def summarize_topic(
-    query,
-    center_label,
-    retrieved_by_subtheme
-):
+def summarize_topic(query, center_label, retrieved_by_subtheme):
     evidence_lines = []
 
     for subtheme, verses in retrieved_by_subtheme.items():
 
-        evidence_lines.append(
-            f"\nSUBTHEME: {subtheme}"
-        )
+        evidence_lines.append(f"\nSUBTHEME: {subtheme}")
 
         for verse in verses[:5]:
 
-            evidence_lines.append(
-                f"- {verse['label']}: "
-                f"{verse['text'][:350]}"
-            )
+            evidence_lines.append(f"- {verse['label']}: " f"{verse['text'][:350]}")
 
-    evidence = "\n".join(
-        evidence_lines
-    )
+    evidence = "\n".join(evidence_lines)
 
     system_prompt = """
 You summarize Bible topic data.
@@ -316,20 +249,12 @@ Retrieved Bible evidence:
 {evidence}
 """
 
-    result = call_openai_json(
-        system_prompt,
-        user_prompt
-    )
+    result = call_openai_json(system_prompt, user_prompt)
 
     return TopicSummary(**result)
 
 
-def explain_connections(
-    query,
-    center_label,
-    center_text,
-    retrieved_connections
-):
+def explain_connections(query, center_label, center_text, retrieved_connections):
     if not retrieved_connections:
         return None
 
@@ -343,9 +268,7 @@ def explain_connections(
             f"[source={item.get('source', 'retrieved')}]"
         )
 
-    evidence = "\n".join(
-        evidence_lines
-    )
+    evidence = "\n".join(evidence_lines)
 
     system_prompt = """
 You explain relationships inside a Bible knowledge graph.
@@ -387,9 +310,6 @@ Retrieved connections:
 {evidence}
 """
 
-    result = call_openai_json(
-        system_prompt,
-        user_prompt
-    )
+    result = call_openai_json(system_prompt, user_prompt)
 
     return ExplanationBundle(**result)

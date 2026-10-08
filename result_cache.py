@@ -1,4 +1,5 @@
 """Bounded, short-lived, process-local cache with same-request coalescing."""
+
 from collections import OrderedDict
 from concurrent.futures import Future
 from copy import deepcopy
@@ -12,6 +13,8 @@ TTL = 600
 MAX_RESULTS = 96
 
 
+# One request owns the build; matching requests wait on its Future. Never hold the
+# lock during network work, and return copies so callers cannot mutate cached graphs.
 def cached_result(key, builder):
     with _lock:
         saved = _results.get(key)
