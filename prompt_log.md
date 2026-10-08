@@ -60,3 +60,7 @@ I used ChatGPT to help with:
 - writing project documentation
 
 I tested and revised the generated code throughout development and made decisions about the final project structure, functionality, appearance, and scope.
+
+## Project 2 continuation (AI-generated factual record)
+
+The original log above describes the earlier project. The P2 implementation/application requests and new development record are in the [separate P2 prompt log](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/prompt_log.md). Codex modified app.py, bible_data.py, and services.py for safe errors, full ranges, lexical boundaries, data caching, optional lookup resilience, and empty-result handling. Student-written changes and actual focused work time must still be recorded by the student.

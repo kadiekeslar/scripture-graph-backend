@@ -5,6 +5,7 @@ from bible_data import (
     ref_id,
     ref_label,
     get_verse_text,
+    get_passage_text,
     get_cross_references,
     get_chapter_entities,
     find_person,
@@ -152,7 +153,7 @@ def build_verse_graph(query, parsed):
             r.get("endVerse"),
         )
         try:
-            target_text = get_verse_text(target_book, target_chapter, target_verse)
+            target_text = get_passage_text(target_book, target_chapter, target_verse, r.get("endVerse"))
         except Exception:
             target_text = ""
 
@@ -165,7 +166,7 @@ def build_verse_graph(query, parsed):
                 reference=target_label,
                 text=target_text,
                 score=r.get("score"),
-                sourceName="Open Bible Cross References",
+                sourceName="Berean Standard Bible text / Open Bible Cross References",
             )
         )
         edges.append(
@@ -260,7 +261,7 @@ def build_entity_graph(query, kind, match):
             r["book"], r["chapter"], r["verse"], r.get("endVerse")
         )
         try:
-            text = get_verse_text(r["book"], r["chapter"], r["verse"])
+            text = get_passage_text(r["book"], r["chapter"], r["verse"], r.get("endVerse"))
         except Exception:
             text = ""
 
@@ -444,7 +445,7 @@ def build_topic_graph(query, analysis):
         if direct_added >= 5:
             break
 
-    if len(nodes) <= 1:
+    if not any(item["data"]["type"] == "verse" for item in nodes):
         raise ValueError(
             "I understood the topic, but could not retrieve matching Bible passages."
         )
@@ -496,9 +497,16 @@ def explore_query(query):
         return build_verse_graph(query, parsed)
 
     # 2. Only exact or exceptionally strong entity matches bypass AI.
-    person, person_score, person_exact = find_person(query)
-    place, place_score, place_exact = find_place(query)
-    event, event_score, event_exact = find_event(query)
+    def optional_match(finder, value):
+        try:
+            return finder(value)
+        except Exception as exc:
+            print("Entity lookup unavailable:", type(exc).__name__)
+            return None, 0.0, False
+
+    person, person_score, person_exact = optional_match(find_person, query)
+    place, place_score, place_exact = optional_match(find_place, query)
+    event, event_score, event_exact = optional_match(find_event, query)
 
     ranked = sorted(
         [
@@ -515,11 +523,13 @@ def explore_query(query):
         return build_entity_graph(query, kind, match)
 
     # 3. Free-form topics/questions are interpreted by AI.
-    analysis = analyze_query(query)
-    if analysis is None:
-        raise ValueError(
-            "This search needs AI. Add OPENAI_API_KEY to backend/.env and restart Flask."
-        )
+    try:
+        analysis = analyze_query(query)
+        if analysis is None:
+            raise RuntimeError("AI interpretation unavailable")
+    except Exception as exc:
+        print("Query interpretation unavailable:", type(exc).__name__)
+        raise RuntimeError("Query interpretation service unavailable") from exc
 
     # If AI recognizes a normalized entity, resolve it against the real entity dataset.
     if analysis.query_type in {"person", "place", "event"}:
@@ -529,7 +539,7 @@ def explore_query(query):
             "event": find_event,
         }[analysis.query_type]
 
-        match, score, exact = finder(analysis.normalized_query)
+        match, score, exact = optional_match(finder, analysis.normalized_query)
         if match and (exact or score >= 0.92):
             return build_entity_graph(query, analysis.query_type, match)
 

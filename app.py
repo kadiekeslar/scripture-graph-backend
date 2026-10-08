@@ -14,7 +14,7 @@ def home():
     return jsonify({
         "name": "Scripture Graph API",
         "status": "ok",
-        "version": "topic-cluster-v2",
+        "version": "compare-study-p2",
         "description": "AI-assisted Bible knowledge graph using retrieved Bible data.",
         "example": "/explore?q=fear"
     })
@@ -35,6 +35,9 @@ def explore():
             "example": "/explore?q=fear"
         }), 400
 
+    if len(query) > 300:
+        return jsonify({"error": "Keep your search under 300 characters."}), 400
+
     try:
         return jsonify(explore_query(query))
     except ValueError as exc:
@@ -42,8 +45,7 @@ def explore():
     except Exception as exc:
         print("EXPLORE ERROR:", repr(exc))
         return jsonify({
-            "error": "The graph could not be built right now.",
-            "detail": str(exc)
+            "error": "The graph could not be built right now. Please retry; a data service may be unavailable."
         }), 500
 
 

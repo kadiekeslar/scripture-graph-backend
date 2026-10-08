@@ -125,6 +125,25 @@ def get_verse_text(book, chapter, verse):
     return ""
 
 
+def get_passage_text(book, chapter, verse, end_verse=None):
+    """Retrieve every verse in a same-chapter range, never silently just its start."""
+    end = verse if end_verse is None else int(end_verse)
+    if verse < 1 or end < verse or end - verse > 175:
+        raise ValueError("Please use a valid same-chapter verse range.")
+    data = get_chapter(book, chapter)
+    texts = {
+        int(item["number"]): item.get("text", "")
+        for item in data.get("chapter", {}).get("content", [])
+        if item.get("type") == "verse"
+    }
+    if any(not texts.get(number) for number in range(verse, end + 1)):
+        raise ValueError("One or more verses in this passage could not be found.")
+    if end == verse:
+        return texts[verse]
+    return " ".join(f"[{number}] {texts[number]}" for number in range(verse, end + 1))
+
+
+@lru_cache(maxsize=256)
 def get_cross_references(book, chapter, verse, limit=10):
     data = _fetch_json(f"{BASE}/d/open-cross-ref/{book}/{chapter}.json")
     for item in data.get("chapter", {}).get("content", []):
@@ -135,6 +154,7 @@ def get_cross_references(book, chapter, verse, limit=10):
     return []
 
 
+@lru_cache(maxsize=256)
 def get_chapter_entities(book, chapter):
     try:
         return _fetch_json(f"{BASE}/d/theographic/{book}/{chapter}.json")
@@ -208,6 +228,7 @@ def find_event(query):
     return _best_entity_match(query, events_index())
 
 
+@lru_cache(maxsize=256)
 def get_entity_detail(kind, entity_id):
     plural = {"person": "people", "place": "places", "event": "events"}[kind]
     data = _fetch_json(f"{BASE}/d/theographic/{plural}/{entity_id}.json")
@@ -274,6 +295,7 @@ def search_bible_text(search_terms, limit=30, preferred_books=None):
     if not clean_terms:
         return []
 
+    patterns = [(term, re.compile(r"\b" + re.escape(term) + (r"\b" if " " in term else r"\w*\b"))) for term in clean_terms]
     preferred = set(preferred_books or [])
     results = []
 
@@ -281,17 +303,11 @@ def search_bible_text(search_terms, limit=30, preferred_books=None):
         text = verse["normalized"]
         score = 0
 
-        for term in clean_terms:
-            if term in text:
-                word_count = len(term.split())
-                score += 5 + word_count * 2
-            else:
-                # For single terms, also match simple token-prefix forms
-                # e.g. fear -> fearful, fearing.
-                if " " not in term:
-                    pattern = rf"\b{re.escape(term)}\w*\b"
-                    if re.search(pattern, text):
-                        score += 3
+        for term, pattern in patterns:
+            match = pattern.search(text)
+            if match:
+                # Match whole words or word-prefix variants, never "love" in "glove".
+                score += 5 + len(term.split()) * 2 if match.group(0) == term else 3
 
         if score == 0:
             continue

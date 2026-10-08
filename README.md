@@ -171,3 +171,9 @@ https://kadiekeslar.github.io/scripture-graph/
 AI tools were used during brainstorming, implementation, debugging, and refinement of the project.
 
 See [`prompt_log.md`](prompt_log.md) for the AI tools/models used and the key prompts that shaped the implementation.
+
+## Project 2 upgrade
+
+The Compare & Study frontend adds deterministic exact-reference comparison, study collections, personal notes saved in browser storage, and Markdown export. Backend changes retrieve complete cross-reference verse ranges, match search terms at word boundaries, cache external data, reject empty topic results, handle optional entity lookup failures, and return safe public errors. The root API version is `compare-study-p2`.
+
+See the [P2 frontend README](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/README.md) and [P2 prompt log](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/prompt_log.md) for the new workflow, AI attribution, and remaining student-authored documentation. This section was generated with Codex.
