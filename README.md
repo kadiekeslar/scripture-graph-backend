@@ -177,3 +177,11 @@ See [`prompt_log.md`](prompt_log.md) for the AI tools/models used and the key pr
 The Compare & Study frontend adds deterministic exact-reference comparison, study collections, personal notes saved in browser storage, and Markdown export. Backend changes retrieve complete cross-reference verse ranges, match search terms at word boundaries, cache external data, reject empty topic results, handle optional entity lookup failures, and return safe public errors. The root API version is `compare-study-p2`.
 
 See the [P2 frontend README](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/README.md) and [P2 prompt log](https://github.com/kadiekeslar/kadiekeslar.github.io/blob/main/scripture-graph/prompt_log.md) for the new workflow, AI attribution, and remaining student-authored documentation. This section was generated with Codex.
+
+## Explained comparison and performance update (AI-generated notes)
+
+The API version is now `compare-insights-p2`. `/explore?fast=1` returns retrieval before final AI summaries. `/explain?q=...` enriches the existing graph, and `POST /compare` with `{"left":"fear","right":"hope"}` returns thematic similarities, differences, citations, and study questions. Citation references are validated against the appropriate retrieved passage set before release.
+
+Data retrieval runs in parallel; successful graph and comparison results are cached for ten minutes in each server process with bounded storage and same-request coalescing. Common topics avoid AI classification in fast mode. The full-translation reader correctly unwraps nested `chapter` records, and initial full-Bible downloads are serialized. More complex questions and final interpretation still depend on external APIs. Service sleep/restarts clear the in-memory cache.
+
+Run `python -m unittest discover -s tests` after installing the requirements. For synchronous provider calls, a Gunicorn command such as `gunicorn app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT` gives room for optional explanations. Render's existing start command must be configured in its dashboard if it still uses a shorter worker timeout; changing repository code does not change that setting.

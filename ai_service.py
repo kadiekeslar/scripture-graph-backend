@@ -1,4 +1,5 @@
 import json
+from functools import lru_cache
 import os
 from typing import Literal
 from urllib.request import Request, urlopen
@@ -166,6 +167,7 @@ def call_openai_json(system_prompt, user_prompt):
         )
 
 
+@lru_cache(maxsize=128)
 def analyze_query(query):
     system_prompt = """
 You interpret searches for an interactive Bible knowledge graph.

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 
 from bible_data import (
     parse_reference,
@@ -16,6 +17,16 @@ from bible_data import (
     verify_reference,
 )
 from ai_service import analyze_query, explain_connections, summarize_topic
+
+
+DATA_POOL = ThreadPoolExecutor(max_workers=8)
+
+
+def safe_passage(reference):
+    try:
+        return get_passage_text(reference["book"], reference["chapter"], reference["verse"], reference.get("endVerse"))
+    except Exception:
+        return ""
 
 
 MAX_GRAPH_NODES = 34
@@ -111,7 +122,7 @@ def add_ai_explanations(query, center_id, center_label, center_text, nodes, edge
     return nodes, edges, bundle.center_summary
 
 
-def build_verse_graph(query, parsed):
+def build_verse_graph(query, parsed, with_explanations=True):
     book = parsed["book"]
     chapter = parsed["chapter"]
     verse = parsed["verse"]
@@ -141,6 +152,7 @@ def build_verse_graph(query, parsed):
     edges = []
 
     refs = get_cross_references(book, chapter, verse, limit=12)
+    retrieved_texts = list(DATA_POOL.map(safe_passage, refs))
     for i, r in enumerate(refs):
         target_book = r["book"]
         target_chapter = r["chapter"]
@@ -152,10 +164,7 @@ def build_verse_graph(query, parsed):
             target_verse,
             r.get("endVerse"),
         )
-        try:
-            target_text = get_passage_text(target_book, target_chapter, target_verse, r.get("endVerse"))
-        except Exception:
-            target_text = ""
+        target_text = retrieved_texts[i]
 
         nodes.append(
             node(
@@ -212,11 +221,12 @@ def build_verse_graph(query, parsed):
         print("Entity enrichment skipped:", repr(exc))
 
     nodes, edges = dedupe_graph(nodes, edges)
-    nodes, edges, ai_summary = add_ai_explanations(
-        query, center_id, center_label, center_text, nodes, edges
-    )
-    if ai_summary:
-        nodes[0]["data"]["summary"] = ai_summary
+    if with_explanations:
+        nodes, edges, ai_summary = add_ai_explanations(
+            query, center_id, center_label, center_text, nodes, edges
+        )
+        if ai_summary:
+            nodes[0]["data"]["summary"] = ai_summary
 
     return {
         "query": query,
@@ -234,7 +244,7 @@ def build_verse_graph(query, parsed):
     }
 
 
-def build_entity_graph(query, kind, match):
+def build_entity_graph(query, kind, match, with_explanations=True):
     detail = get_entity_detail(kind, match["id"])
     center_id = f"{kind}-{detail['id']}"
     center_label = detail.get("name", query)
@@ -255,15 +265,14 @@ def build_entity_graph(query, kind, match):
     ]
     edges = []
 
-    for i, r in enumerate(detail.get("references", [])[:12]):
+    refs = detail.get("references", [])[:12]
+    retrieved_texts = list(DATA_POOL.map(safe_passage, refs))
+    for i, r in enumerate(refs):
         target_id = ref_id(r["book"], r["chapter"], r["verse"])
         target_label = ref_label(
             r["book"], r["chapter"], r["verse"], r.get("endVerse")
         )
-        try:
-            text = get_passage_text(r["book"], r["chapter"], r["verse"], r.get("endVerse"))
-        except Exception:
-            text = ""
+        text = retrieved_texts[i]
 
         nodes.append(
             node(
@@ -288,11 +297,12 @@ def build_entity_graph(query, kind, match):
         )
 
     nodes, edges = dedupe_graph(nodes, edges)
-    nodes, edges, ai_summary = add_ai_explanations(
-        query, center_id, center_label, description, nodes, edges
-    )
-    if ai_summary:
-        nodes[0]["data"]["summary"] = ai_summary
+    if with_explanations:
+        nodes, edges, ai_summary = add_ai_explanations(
+            query, center_id, center_label, description, nodes, edges
+        )
+        if ai_summary:
+            nodes[0]["data"]["summary"] = ai_summary
 
     return {
         "query": query,
@@ -323,7 +333,7 @@ def _verse_node_from_search_result(result, topic_label):
     )
 
 
-def build_topic_graph(query, analysis):
+def build_topic_graph(query, analysis, with_explanations=True):
     center_id = "topic-center"
     center_label = analysis.center_label or analysis.normalized_query or query
 
@@ -333,7 +343,7 @@ def build_topic_graph(query, analysis):
             center_label,
             "topic",
             summary=analysis.short_description or "Bible topic search",
-            sourceName="AI query interpretation + real Bible text retrieval",
+            sourceName="Lexical topic grouping + Bible text retrieval" if getattr(analysis, "is_lexical", False) else "AI query interpretation + real Bible text retrieval",
             isCenter=True,
         )
     ]
@@ -379,7 +389,7 @@ def build_topic_graph(query, analysis):
                 subtheme.name,
                 "subtheme",
                 summary=subtheme.description,
-                sourceName="AI-organized category; verses retrieved from Bible text",
+                sourceName="Word-family category; verses retrieved from Bible text" if getattr(analysis, "is_lexical", False) else "AI-organized category; verses retrieved from Bible text",
             )
         )
         edges.append(
@@ -450,26 +460,27 @@ def build_topic_graph(query, analysis):
             "I understood the topic, but could not retrieve matching Bible passages."
         )
 
-    # AI summarizes ONLY the retrieved verses/subthemes.
-    try:
-        topic_summary = summarize_topic(
-            query=query,
-            center_label=center_label,
-            retrieved_by_subtheme=dict(retrieved_by_subtheme),
-        )
-    except Exception as exc:
-        print("Topic summary error:", repr(exc))
-        topic_summary = None
+    if with_explanations:
+        # AI summarizes ONLY the retrieved verses/subthemes.
+        try:
+            topic_summary = summarize_topic(
+                query=query,
+                center_label=center_label,
+                retrieved_by_subtheme=dict(retrieved_by_subtheme),
+            )
+        except Exception as exc:
+            print("Topic summary error:", repr(exc))
+            topic_summary = None
 
-    if topic_summary:
-        nodes[0]["data"]["summary"] = topic_summary.center_summary
+        if topic_summary:
+            nodes[0]["data"]["summary"] = topic_summary.center_summary
 
-        summary_map = topic_summary.subtheme_summaries
-        for n in nodes:
-            if n["data"]["type"] == "subtheme":
-                label = n["data"]["label"]
-                if label in summary_map:
-                    n["data"]["summary"] = summary_map[label]
+            summary_map = topic_summary.subtheme_summaries
+            for n in nodes:
+                if n["data"]["type"] == "subtheme":
+                    label = n["data"]["label"]
+                    if label in summary_map:
+                        n["data"]["summary"] = summary_map[label]
 
     nodes, edges = dedupe_graph(nodes, edges)
 
@@ -481,7 +492,7 @@ def build_topic_graph(query, analysis):
         "nodes": nodes[:MAX_GRAPH_NODES],
         "edges": edges[:MAX_GRAPH_EDGES],
         "sources": [
-            "AI interprets the topic and creates organizational subthemes",
+            "Word-family categories for common topics" if getattr(analysis, "is_lexical", False) else "AI interprets the topic and creates organizational subthemes",
             "Passages are retrieved from the complete Berean Standard Bible text",
             "AI-proposed references are verified against real Bible text before display",
             "AI summaries are generated only from the retrieved passages",
@@ -490,11 +501,39 @@ def build_topic_graph(query, analysis):
     }
 
 
-def explore_query(query):
+QUICK_TOPICS = {
+    "fear": [("Fear & uncertainty", ["fear", "afraid", "anxiety"]), ("Courage & trust", ["courage", "trust", "fear not"]), ("Reverence", ["fear of the lord", "reverence", "awe"])],
+    "hope": [("Hope & waiting", ["hope", "wait"]), ("Promises", ["promise", "hope"]), ("Future life", ["eternal life", "resurrection", "hope"])],
+    "faith": [("Trust & belief", ["faith", "believe", "trust"]), ("Faith in action", ["faith", "works"]), ("Steadfastness", ["faithful", "endure"])],
+    "love": [("Love for others", ["love", "neighbor"]), ("God's love", ["love", "mercy"]), ("Compassion", ["compassion", "kindness"])],
+    "anxiety": [("Worry & fear", ["anxious", "worry", "afraid"]), ("Peace", ["peace", "rest"]), ("Prayer & trust", ["pray", "trust"])],
+    "forgiveness": [("Forgiveness", ["forgive", "forgiven"]), ("Mercy", ["mercy", "merciful"]), ("Repentance", ["repent", "forgiveness"])],
+    "suffering": [("Trials", ["suffering", "trial"]), ("Perseverance", ["perseverance", "endure"]), ("Comfort", ["comfort", "hope"])],
+    "prayer": [("Prayer", ["pray", "prayer"]), ("Asking & seeking", ["ask", "seek"]), ("Thanksgiving", ["thanksgiving", "give thanks"])],
+}
+
+
+def quick_topic_analysis(query):
+    from types import SimpleNamespace
+    groups = QUICK_TOPICS.get(query.strip().casefold())
+    if not groups:
+        return None
+    return SimpleNamespace(query_type="topic", center_label=query.title(), normalized_query=query,
+        short_description="Passages grouped by related word families; explore context and AI explanations for interpretation.",
+        search_terms=groups[0][1], preferred_books=[], candidate_references=[], is_lexical=True,
+        subthemes=[SimpleNamespace(name=name, description=f"Retrieved passages matching: {', '.join(terms)}.", search_terms=terms) for name, terms in groups])
+
+
+def explore_query(query, with_explanations=True):
     # 1. Exact Bible references are deterministic.
     parsed = parse_reference(query)
     if parsed and parsed["verse"] is not None:
-        return build_verse_graph(query, parsed)
+        return build_verse_graph(query, parsed, with_explanations)
+
+    # Common topic words have a transparent lexical fast path; interpretation loads later.
+    quick = quick_topic_analysis(query) if not with_explanations else None
+    if quick:
+        return build_topic_graph(query, quick, with_explanations=False)
 
     # 2. Only exact or exceptionally strong entity matches bypass AI.
     def optional_match(finder, value):
@@ -504,9 +543,8 @@ def explore_query(query):
             print("Entity lookup unavailable:", type(exc).__name__)
             return None, 0.0, False
 
-    person, person_score, person_exact = optional_match(find_person, query)
-    place, place_score, place_exact = optional_match(find_place, query)
-    event, event_score, event_exact = optional_match(find_event, query)
+    lookups = list(DATA_POOL.map(lambda finder: optional_match(finder, query), [find_person, find_place, find_event]))
+    (person, person_score, person_exact), (place, place_score, place_exact), (event, event_score, event_exact) = lookups
 
     ranked = sorted(
         [
@@ -520,7 +558,7 @@ def explore_query(query):
 
     kind, match, score, exact = ranked[0]
     if match and (exact or score >= 0.97):
-        return build_entity_graph(query, kind, match)
+        return build_entity_graph(query, kind, match, with_explanations)
 
     # 3. Free-form topics/questions are interpreted by AI.
     try:
@@ -541,13 +579,38 @@ def explore_query(query):
 
         match, score, exact = optional_match(finder, analysis.normalized_query)
         if match and (exact or score >= 0.92):
-            return build_entity_graph(query, analysis.query_type, match)
+            return build_entity_graph(query, analysis.query_type, match, with_explanations)
 
     # If AI normalized a Bible reference, parse and retrieve it normally.
     if analysis.query_type == "verse":
         parsed = parse_reference(analysis.normalized_query)
         if parsed and parsed["verse"] is not None:
-            return build_verse_graph(query, parsed)
+            return build_verse_graph(query, parsed, with_explanations)
 
     # Everything else becomes a data-driven topic/question graph.
-    return build_topic_graph(query, analysis)
+    return build_topic_graph(query, analysis, with_explanations)
+
+
+def enrich_graph(graph):
+    """Add explanation text to an existing graph without rebuilding retrieval."""
+    center = next(n["data"] for n in graph["nodes"] if n["data"]["id"] == graph["center"])
+    if graph["queryType"] in {"topic", "question"}:
+        by_id = {n["data"]["id"]: n["data"] for n in graph["nodes"]}
+        evidence = defaultdict(list)
+        for edge_item in graph["edges"]:
+            d = edge_item["data"]
+            source, target = by_id[d["source"]], by_id[d["target"]]
+            if source["type"] == "subtheme" and target["type"] == "verse":
+                evidence[source["label"]].append({"label": target["label"], "text": target.get("text", "")})
+        bundle = summarize_topic(graph["query"], graph["centerLabel"], dict(evidence))
+        center["summary"] = bundle.center_summary
+        for item in graph["nodes"]:
+            d = item["data"]
+            if d["type"] == "subtheme" and d["label"] in bundle.subtheme_summaries:
+                d["summary"] = bundle.subtheme_summaries[d["label"]]
+    else:
+        graph["nodes"], graph["edges"], summary = add_ai_explanations(graph["query"], graph["center"], graph["centerLabel"], center.get("text", center.get("summary", "")), graph["nodes"], graph["edges"])
+        if not summary:
+            raise RuntimeError("Explanation service unavailable")
+        center["summary"] = summary
+    return graph

@@ -2,6 +2,7 @@ import json
 import re
 from difflib import SequenceMatcher
 from functools import lru_cache
+from threading import Lock
 from urllib.request import Request, urlopen
 
 BASE = "https://bible.helloao.org/api"
@@ -235,13 +236,22 @@ def get_entity_detail(kind, entity_id):
     return data.get(kind, {})
 
 
+_translation_lock = Lock()
+
+
 @lru_cache(maxsize=1)
-def get_complete_translation():
+def _load_complete_translation():
     """
     Loads the full BSB once per server process. This enables real full-Bible
     keyword/topic retrieval without hard-coded verse lists.
     """
     return _fetch_json(f"{BASE}/{TRANSLATION}/complete.simple.json")
+
+
+def get_complete_translation():
+    # Concurrent first searches share one full-Bible download and parsed object.
+    with _translation_lock:
+        return _load_complete_translation()
 
 
 @lru_cache(maxsize=1)
@@ -254,7 +264,9 @@ def verse_corpus():
         if not book_id:
             continue
 
-        for chapter in book.get("chapters", []):
+        for chapter_record in book.get("chapters", []):
+            # The complete API wraps each chapter inside metadata and a chapter object.
+            chapter = chapter_record.get("chapter", chapter_record)
             chapter_number = chapter.get("number") or chapter.get("chapterNumber")
             for item in chapter.get("content", []):
                 if item.get("type") != "verse":
