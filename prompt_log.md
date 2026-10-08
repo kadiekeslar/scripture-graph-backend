@@ -1,8 +1,8 @@
 # Project 2 prompt log — Scripture Graph
 
-## Scope and provenance
+## Project background
 
-This is a P2 record assembled by Codex from this conversation. It separates the reused HW4 foundation from new P2 work. Complete prompts below are copied verbatim; any partial quotation is explicitly labeled as an excerpt. Process notes are AI-written factual summaries, not additional prompts.
+P2 builds on the HW4 Scripture Graph. The prompts below record the new comparison, notebook, performance, and interface work. Partial quotations are labeled as excerpts.
 
 ## Which tool for which job
 
@@ -129,3 +129,11 @@ Write the README's personal explanation in your own words, record actual indepen
 ## Backend-specific location
 
 This log sits next to the backend README. The matching main project log is in the portfolio repository’s `scripture-graph/` folder. The earlier HW4 log is preserved separately as `prompt_log_hw4.md`; it is not new P2 work.
+
+## Final README and notebook wording revision
+
+Verbatim prompt:
+
+> do the readme for me make it sound human like and just make a small student like change and take away anything in the read me thats like  This is a P2 record assembled by Codex from this conversation. It separates the reused HW4 foundation from new P2 work. Complete prompts below are copied verbatim; any partial quotation is explicitly labeled as an excerpt. Process notes are AI-written factual summaries, not additional prompts.
+
+**Outcome:** Codex rewrote the README in plain language, removed checklist placeholders and the lengthy introductory process note, and kept a brief AI credit. In `app.js` → `renderNotebook`, Codex changed the empty-folder heading and instruction to name the selected folder explicitly. This is a small AI-written interface copy change requested by the student, not an independent student-authored code change.
